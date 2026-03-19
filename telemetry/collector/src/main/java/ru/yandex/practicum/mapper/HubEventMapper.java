@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 @Component
 public class HubEventMapper {
 
-    public HubEventAvro toAvro(HubEvent event) {
+    public static HubEventAvro toAvro(HubEvent event) {
         HubEventAvro.Builder builder = HubEventAvro.newBuilder()
                 .setHubId(event.getHubId())
                 .setTimestamp(event.getTimestamp());

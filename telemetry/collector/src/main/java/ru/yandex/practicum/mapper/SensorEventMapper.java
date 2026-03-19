@@ -6,7 +6,7 @@ import ru.yandex.practicum.model.sensor.*;
 
 @Component
 public class SensorEventMapper {
-    public SensorEventAvro toAvro(SensorEvent event) {
+    public static SensorEventAvro toAvro(SensorEvent event) {
         SensorEventAvro.Builder builder = SensorEventAvro.newBuilder()
                 .setId(event.getId())
                 .setHubId(event.getHubId())

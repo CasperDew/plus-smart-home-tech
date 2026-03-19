@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class DeviceAddedEvent extends HubEvent  {
+public class DeviceAddedEvent extends HubEvent {
     @NotBlank
     private String id;
 

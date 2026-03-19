@@ -9,7 +9,7 @@ import lombok.Setter;
 public class DeviceRemovedEvent extends HubEvent {
 
     @NotBlank
-    String id;
+    private String id;
 
     @Override
     public HubEventType getType() {
