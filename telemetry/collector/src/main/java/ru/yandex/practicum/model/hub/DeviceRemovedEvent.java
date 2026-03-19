@@ -1,11 +1,11 @@
 package ru.yandex.practicum.model.hub;
 
 import jakarta.validation.constraints.NotBlank;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-@Getter
-@Setter
+@EqualsAndHashCode(callSuper = true)
+@Data
 public class DeviceRemovedEvent extends HubEvent {
 
     @NotBlank
