@@ -1,6 +1,7 @@
 package ru.yandex.practicum.kafka;
 
 import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -13,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Properties;
 
+@Slf4j
 @Component
 public class KafkaClient {
     private final Producer<String, SpecificRecordBase> producer;
@@ -34,6 +36,7 @@ public class KafkaClient {
         ProducerRecord<String, SpecificRecordBase> producerRecord =
                 new ProducerRecord<>(topic, null, timestamp.toEpochMilli(), key, record);
         producer.send(producerRecord);
+        producer.flush();
     }
 
     @PreDestroy
