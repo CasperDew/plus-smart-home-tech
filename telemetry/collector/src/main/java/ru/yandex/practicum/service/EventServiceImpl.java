@@ -4,13 +4,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.kafka.KafkaClient;
 import ru.yandex.practicum.kafka.telemetry.event.HubEventAvro;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 import ru.yandex.practicum.mapper.HubEventMapper;
 import ru.yandex.practicum.mapper.SensorEventMapper;
-import ru.yandex.practicum.model.hub.HubEvent;
-import ru.yandex.practicum.model.sensor.SensorEvent;
 
 @Slf4j
 @Service
@@ -26,7 +26,7 @@ public class EventServiceImpl implements EventService {
     private String hubsTopic;
 
     @Override
-    public void sendSensorEvent(SensorEvent sensorEvent) {
+    public void sendSensorEvent(SensorEventProto sensorEvent) {
         SensorEventAvro sensorEventAvro = SensorEventMapper.toAvro(sensorEvent);
         log.info("Sensor Event {}", sensorEvent);
         kafkaClient.send(
@@ -37,7 +37,7 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public void sendHudEvent(HubEvent hubEvent) {
+    public void sendHudEvent(HubEventProto hubEvent) {
         HubEventAvro hubEventAvro = HubEventMapper.toAvro(hubEvent);
         log.info("Hub event {}", hubEvent);
         kafkaClient.send(
