@@ -1,36 +1,53 @@
 package ru.yandex.practicum.controller;
 
-import jakarta.validation.Valid;
+import com.google.protobuf.Empty;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
+import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.mapper.HubEventMapper;
-import ru.yandex.practicum.mapper.SensorEventMapper;
-import ru.yandex.practicum.model.hub.HubEvent;
-import ru.yandex.practicum.model.sensor.SensorEvent;
+import net.devh.boot.grpc.server.service.GrpcService;
+import ru.yandex.practicum.grpc.telemetry.collector.CollectorControllerGrpc;
+import ru.yandex.practicum.grpc.telemetry.event.HubEventProto;
+import ru.yandex.practicum.grpc.telemetry.event.SensorEventProto;
 import ru.yandex.practicum.service.EventService;
 
 @Slf4j
-@RestController
 @RequiredArgsConstructor
-@RequestMapping("/events")
-public class HubEventController {
-    private final SensorEventMapper sensorEventMapper;
-    private final HubEventMapper hubEventMapper;
+@GrpcService
+public class HubEventController extends CollectorControllerGrpc.CollectorControllerImplBase {
     private final EventService eventService;
 
-    @PostMapping("/sensors")
-    @ResponseStatus(HttpStatus.OK)
-    public void collectSensor(@Valid @RequestBody SensorEvent sensorEvent) {
-        log.info("Получение SensorEvent: {}", sensorEvent);
-        eventService.sendSensorEvent(sensorEvent);
+    @Override
+    public void collectSensorEvent(SensorEventProto request, StreamObserver<Empty> responseObserver) {
+        log.info("Получение SensorEventProto: {}", request);
+        try {
+            eventService.sendSensorEvent(request);
+
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(new StatusRuntimeException(
+                    Status.INTERNAL
+                            .withDescription(e.getLocalizedMessage())
+                            .withCause(e)
+            ));
+        }
     }
 
-    @PostMapping("/hubs")
-    @ResponseStatus(HttpStatus.OK)
-    public void collectHub(@Valid @RequestBody HubEvent hubEvent) {
-        log.info("Получение HubEvent: {}", hubEvent);
-        eventService.sendHudEvent(hubEvent);
+    @Override
+    public void collectHubEvent(HubEventProto request, StreamObserver<Empty> responseObserver) {
+        try {
+            eventService.sendHudEvent(request);
+
+            responseObserver.onNext(Empty.getDefaultInstance());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(new StatusRuntimeException(
+                    Status.INTERNAL
+                            .withDescription(e.getLocalizedMessage())
+                            .withCause(e)
+            ));
+        }
     }
 }
