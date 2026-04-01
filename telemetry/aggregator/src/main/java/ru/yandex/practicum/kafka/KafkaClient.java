@@ -49,3 +49,4 @@ public class KafkaClient {
         producer.close(Duration.ofSeconds(10));
     }
 }
+
