@@ -7,8 +7,8 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: ru.yandex.practicum.telemetry.serializer.AvroSerializer
-
-  collector:
-    topics:
-      sensors: telemetry.sensors.v1
-      snapshots: telemetry.snapshots.v1
+    aggregator:
+      group: aggregator.group.id
+      topics:
+        sensors: telemetry.sensors.v1
+        snapshots: telemetry.snapshots.v1

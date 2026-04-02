@@ -17,14 +17,17 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class AggregatorServiceImpl implements AggregatorService {
+
     private final KafkaClient kafkaClient;
     private final Map<String, SensorsSnapshotAvro> snapshots = new HashMap<>();
 
-    @Value("telemetry.snapshots.v1")
+    @Value("${spring.kafka.aggregator.topics.snapshots}")
     private String snapshotsTopic;
 
     @Override
     public void handleEvent(SensorEventAvro sensorEventAvro) {
+        log.info("Получение события {}", sensorEventAvro);
+
         Optional<SensorsSnapshotAvro> sensorsSnapshotAvroOptional = updateState(sensorEventAvro);
         if (sensorsSnapshotAvroOptional.isPresent()) {
             SensorsSnapshotAvro sensorSnapshotAvro = sensorsSnapshotAvroOptional.get();

@@ -24,14 +24,19 @@ import java.util.Properties;
 public class AggregationStarter {
     private final AggregatorServiceImpl aggregatorService;
 
-    @Value("${collector.topics.sensors}")
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
+
+    @Value("${spring.kafka.aggregator.group}")
+    private String groupId;
+
+    @Value("${spring.kafka.aggregator.topics.sensors}")
     private String sensorsTopic;
 
     public void start() {
         Properties properties = new Properties();
-        properties.put(ConsumerConfig.CLIENT_ID_CONFIG, "SomeConsumer");
-        properties.put(ConsumerConfig.GROUP_ID_CONFIG, "some.group.id");
-        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        properties.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getCanonicalName());
         properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, SensorEventDeserializer.class
                 .getCanonicalName());
@@ -42,8 +47,11 @@ public class AggregationStarter {
             consumer.subscribe(List.of(sensorsTopic));
             while (true) {
                 ConsumerRecords<String, SensorEventAvro> records = consumer.poll(Duration.ofMillis(500));
-                for (ConsumerRecord<String, SensorEventAvro> record : records) {
-                    aggregatorService.handleEvent(record.value());
+                if (!records.isEmpty()) {
+                    for (ConsumerRecord<String, SensorEventAvro> record : records) {
+                        consumer.commitSync();
+                        aggregatorService.handleEvent(record.value());
+                    }
                 }
             }
         } catch (WakeupException ignored) {
