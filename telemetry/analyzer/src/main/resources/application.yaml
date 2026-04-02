@@ -21,7 +21,6 @@ grpc:
       enableKeepAlive: true
       keepAliveWithoutCalls: true
       negotiationType: plaintext
-      keepAliveTime: 5s
 
 telemetry:
   kafka:
