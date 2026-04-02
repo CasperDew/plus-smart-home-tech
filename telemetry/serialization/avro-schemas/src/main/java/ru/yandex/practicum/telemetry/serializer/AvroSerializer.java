@@ -18,15 +18,13 @@ public class AvroSerializer implements Serializer<SpecificRecordBase> {
 
     public byte[] serialize(String topic, SpecificRecordBase data) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            byte[] result = null;
-            encoder = encoderFactory.binaryEncoder(out, encoder);
             if (data != null) {
                 DatumWriter<SpecificRecordBase> writer = new SpecificDatumWriter<>(data.getSchema());
+                encoder = encoderFactory.binaryEncoder(out, encoder);
                 writer.write(data, encoder);
                 encoder.flush();
-                result = out.toByteArray();
             }
-            return result;
+            return out.toByteArray();
         } catch (IOException e) {
             throw new SerializationException("Ошибка сериализации" + topic, e);
         }

@@ -2,6 +2,7 @@ package ru.yandex.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.kafka.KafkaClient;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
@@ -16,18 +17,24 @@ import java.util.Optional;
 @RequiredArgsConstructor
 @Service
 public class AggregatorServiceImpl implements AggregatorService {
+
     private final KafkaClient kafkaClient;
     private final Map<String, SensorsSnapshotAvro> snapshots = new HashMap<>();
 
+    @Value("${spring.kafka.aggregator.topics.snapshots}")
+    private String snapshotsTopic;
+
     @Override
     public void handleEvent(SensorEventAvro sensorEventAvro) {
+        log.info("Получение события {}", sensorEventAvro);
+
         Optional<SensorsSnapshotAvro> sensorsSnapshotAvroOptional = updateState(sensorEventAvro);
         if (sensorsSnapshotAvroOptional.isPresent()) {
             SensorsSnapshotAvro sensorSnapshotAvro = sensorsSnapshotAvroOptional.get();
 
             log.info("Сохранение состояния датчика {}", sensorSnapshotAvro);
 
-            kafkaClient.send("telemetry.snapshots.v1", sensorSnapshotAvro, sensorSnapshotAvro.getTimestamp(),
+            kafkaClient.send(snapshotsTopic, sensorSnapshotAvro, sensorSnapshotAvro.getTimestamp(),
                     sensorSnapshotAvro.getHubId());
         }
     }
