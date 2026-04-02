@@ -43,15 +43,17 @@ public class AggregationStarter {
 
         KafkaConsumer<String, SensorEventAvro> consumer = new KafkaConsumer<>(properties);
 
+        Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
+
         try {
             consumer.subscribe(List.of(sensorsTopic));
             while (true) {
                 ConsumerRecords<String, SensorEventAvro> records = consumer.poll(Duration.ofMillis(500));
                 if (!records.isEmpty()) {
                     for (ConsumerRecord<String, SensorEventAvro> record : records) {
-                        consumer.commitSync();
                         aggregatorService.handleEvent(record.value());
                     }
+                    consumer.commitSync();
                 }
             }
         } catch (WakeupException ignored) {

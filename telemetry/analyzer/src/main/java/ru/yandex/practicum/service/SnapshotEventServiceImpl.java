@@ -57,18 +57,18 @@ public class SnapshotEventServiceImpl implements SnapshotEventService {
         ConditionOperationAvro operationAvro = condition.getOperation();
 
         return switch (state.getData()) {
-            case TemperatureSensorAvro temperatureSensor -> switch (typeAvro) {
-                case TEMPERATURE -> checkPredicate(operationAvro, targetValue, temperatureSensor.getTemperatureC());
+            case TemperatureSensorAvro temperature -> switch (typeAvro) {
+                case TEMPERATURE -> checkPredicate(operationAvro, targetValue, temperature.getTemperatureC());
                 default -> false;
             };
-            case ClimateSensorAvro climateSensor -> switch (typeAvro) {
-                case TEMPERATURE -> checkPredicate(operationAvro, targetValue, climateSensor.getTemperatureC());
-                case HUMIDITY -> checkPredicate(operationAvro, targetValue, climateSensor.getHumidity());
-                case CO2LEVEL -> checkPredicate(operationAvro, targetValue, climateSensor.getCo2Level());
+            case ClimateSensorAvro climate -> switch (typeAvro) {
+                case TEMPERATURE -> checkPredicate(operationAvro, targetValue, climate.getTemperatureC());
+                case HUMIDITY -> checkPredicate(operationAvro, targetValue, climate.getHumidity());
+                case CO2LEVEL -> checkPredicate(operationAvro, targetValue, climate.getCo2Level());
                 default -> false;
             };
-            case LightSensorAvro lightSensor -> switch (typeAvro) {
-                case LUMINOSITY -> checkPredicate(operationAvro, targetValue, lightSensor.getLuminosity());
+            case LightSensorAvro light -> switch (typeAvro) {
+                case LUMINOSITY -> checkPredicate(operationAvro, targetValue, light.getLuminosity());
                 default -> false;
             };
             case MotionSensorAvro motion -> switch (typeAvro) {

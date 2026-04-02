@@ -45,6 +45,8 @@ public class HubEventProcessor implements Runnable {
 
         KafkaConsumer<String, HubEventAvro> consumer = new KafkaConsumer<>(properties);
 
+        Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
+
         try {
             consumer.subscribe(List.of(topic));
             while (true) {

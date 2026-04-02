@@ -65,7 +65,7 @@ public class HubEventServiceImpl implements HubEventService {
             }
             case ScenarioRemovedEventAvro event -> {
                 log.info("Удаление сценария: {}", hubEventAvro);
-                scenarioRepository.deleteByName(event.getName());
+                scenarioRepository.deleteByHubIdAndName(hubEventAvro.getHubId(), event.getName());
             }
             default -> throw new IllegalArgumentException("Неизвестный тип payload: " + payload);
 

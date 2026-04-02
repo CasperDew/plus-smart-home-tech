@@ -45,6 +45,8 @@ public class SnapshotProcessor implements Runnable {
 
         KafkaConsumer<String, SensorsSnapshotAvro> consumer = new KafkaConsumer<>(properties);
 
+        Runtime.getRuntime().addShutdownHook(new Thread(consumer::wakeup));
+
         try {
             consumer.subscribe(List.of(topic));
             while (true) {
