@@ -26,8 +26,8 @@ telemetry:
   kafka:
     bootstrap-servers: "localhost:9092"
     hub-processor:
-      group: "hub-snapshots.group.id"
+      group: "hub-event.group.id"
       topic: "telemetry.hubs.v1"
     snapshot-processor:
-      group: "hub-event.group.id"
+      group: "hub-snapshots.group.id"
       topic: "telemetry.snapshots.v1"

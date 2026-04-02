@@ -95,19 +95,24 @@ public class SnapshotEventServiceImpl implements SnapshotEventService {
     private void sendDeviceActions(Scenario scenario) {
         log.info("Отправка активности устройства для сценария {}", scenario.getName());
         scenario.getActions().forEach((key, action) -> {
-            hubRouterClient.handleDeviceAction(DeviceActionRequest.newBuilder()
-                    .setHubId(scenario.getHubId())
-                    .setScenarioName(scenario.getName())
-                    .setAction(DeviceActionProto.newBuilder()
-                            .setSensorId(key)
-                            .setType(ActionTypeProto.valueOf(action.getType().name()))
-                            .setValue(action.getValue())
-                            .build())
-                    .setTimestamp(Timestamp.newBuilder()
-                            .setSeconds(Instant.now().getEpochSecond())
-                            .setNanos(Instant.now().getNano())
-                            .build())
-                    .build());
+            try {
+                hubRouterClient.handleDeviceAction(DeviceActionRequest.newBuilder()
+                        .setHubId(scenario.getHubId())
+                        .setScenarioName(scenario.getName())
+                        .setAction(DeviceActionProto.newBuilder()
+                                .setSensorId(key)
+                                .setType(ActionTypeProto.valueOf(action.getType().name()))
+                                .setValue(action.getValue())
+                                .build())
+                        .setTimestamp(Timestamp.newBuilder()
+                                .setSeconds(Instant.now().getEpochSecond())
+                                .setNanos(Instant.now().getNano())
+                                .build())
+                        .build());
+            } catch (Exception e) {
+                log.error("Ошибка отправки gRPC-действия для сенсора {}: {}", key, e.getMessage(), e);
+            }
+
         });
     }
 }
