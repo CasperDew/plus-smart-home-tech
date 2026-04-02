@@ -1,0 +1,33 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: always
+  datasource:
+    url: jdbc:postgresql://localhost:5432/analyzer
+    driverClassName: org.postgresql.Driver
+    username: analyzer
+    password: analyzer
+
+grpc:
+  client:
+    hub-router:
+      address: 'static://localhost:59090'
+      enableKeepAlive: true
+      keepAliveWithoutCalls: true
+      negotiationType: plaintext
+
+telemetry:
+  kafka:
+    bootstrap-servers: "localhost:9092"
+    hub-processor:
+      group: "hub-snapshots.group.id"
+      topic: "telemetry.hubs.v1"
+    snapshot-processor:
+      group: "hub-event.group.id"
+      topic: "telemetry.snapshots.v1"

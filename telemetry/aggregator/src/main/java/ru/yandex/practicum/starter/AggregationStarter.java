@@ -8,6 +8,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
 import ru.yandex.practicum.service.AggregatorServiceImpl;
@@ -23,6 +24,9 @@ import java.util.Properties;
 public class AggregationStarter {
     private final AggregatorServiceImpl aggregatorService;
 
+    @Value("${collector.topics.sensors}")
+    private String sensorsTopic;
+
     public void start() {
         Properties properties = new Properties();
         properties.put(ConsumerConfig.CLIENT_ID_CONFIG, "SomeConsumer");
@@ -35,7 +39,7 @@ public class AggregationStarter {
         KafkaConsumer<String, SensorEventAvro> consumer = new KafkaConsumer<>(properties);
 
         try {
-            consumer.subscribe(List.of("telemetry.sensors.v1"));
+            consumer.subscribe(List.of(sensorsTopic));
             while (true) {
                 ConsumerRecords<String, SensorEventAvro> records = consumer.poll(Duration.ofMillis(500));
                 for (ConsumerRecord<String, SensorEventAvro> record : records) {
