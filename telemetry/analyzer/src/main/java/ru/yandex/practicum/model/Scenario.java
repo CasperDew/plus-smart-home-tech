@@ -1,18 +1,16 @@
 package ru.yandex.practicum.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Data
 @Entity
 @Builder
 @Table(name = "scenarios")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Scenario {
