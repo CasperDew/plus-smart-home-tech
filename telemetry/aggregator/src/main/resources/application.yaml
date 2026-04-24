@@ -18,3 +18,5 @@ spring:
       userRandomPolicy: true
       max-interval: 6000
 
+server:
+  port: 0
