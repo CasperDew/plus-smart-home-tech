@@ -1,34 +1,22 @@
-spring:
-  jpa:
-    hibernate.ddl-auto: none
-    properties:
-      hibernate:
-        format_sql: true
-        show_sql: false
-      jdbc.time_zone: UTC
-  sql:
-    init:
-      mode: always
-  datasource:
-    url: jdbc:postgresql://localhost:5432/analyzer
-    driverClassName: org.postgresql.Driver
-    username: analyzer
-    password: analyzer
-
-grpc:
+eureka:
   client:
-    hub-router:
-      address: 'static://localhost:59090'
-      enableKeepAlive: true
-      keepAliveWithoutCalls: true
-      negotiationType: plaintext
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/
 
-telemetry:
-  kafka:
-    bootstrap-servers: "localhost:9092"
-    hub-processor:
-      group: "hub-snapshots.group.id"
-      topic: "telemetry.hubs.v1"
-    snapshot-processor:
-      group: "hub-event.group.id"
-      topic: "telemetry.snapshots.v1"
+spring:
+  application:
+    name: analyzer
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      fail-fast: true
+      discovery:
+        enabled: true
+        serviceId: config-server
+    retry:
+      userRandomPolicy: true
+      max-interval: 6000
+
+server:
+  port: 0
