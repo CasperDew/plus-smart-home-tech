@@ -8,12 +8,11 @@ import ru.yandex.practicum.cart.ShoppingCartDto;
 import ru.yandex.practicum.exception.NoSpecifiedProductInWarehouseException;
 import ru.yandex.practicum.exception.ProductInShoppingCartLowQuantityInWarehouseException;
 import ru.yandex.practicum.exception.SpecifiedProductAlreadyInWarehouseException;
+import ru.yandex.practicum.model.OrderBooking;
 import ru.yandex.practicum.model.ProductStock;
+import ru.yandex.practicum.repository.OrderBookingRepository;
 import ru.yandex.practicum.repository.WarehouseProductStockRepository;
-import ru.yandex.practicum.warehouse.AddProductToWarehouseRequest;
-import ru.yandex.practicum.warehouse.AddressDto;
-import ru.yandex.practicum.warehouse.BookedProductsDto;
-import ru.yandex.practicum.warehouse.NewProductInWarehouseRequest;
+import ru.yandex.practicum.warehouse.*;
 
 import java.security.SecureRandom;
 import java.util.*;
@@ -25,6 +24,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class WarehouseServiceImpl implements WarehouseService {
     private final WarehouseProductStockRepository repository;
+    private final OrderBookingRepository bookingRepository;
 
     private static final String[] ADDRESSES = new String[]{"ADDRESS_1", "ADDRESS_2"};
 
@@ -166,6 +166,93 @@ public class WarehouseServiceImpl implements WarehouseService {
 
         log.info("Адрес склада: {}", CURRENT_ADDRESS);
         return address;
+    }
+
+    @Override
+    public BookedProductsDto assemblyProductsForOrder(AssemblyProductsForOrderRequest request) {
+        Map<UUID, Long> products = request.getProducts();
+
+        if (products == null || products.isEmpty()) {
+            throw new IllegalArgumentException("Товары не могут быть пустыми или содержать нулевое значение");
+        }
+
+        double totalWeight = 0.0;
+        double totalVolume = 0.0;
+        boolean fragile = false;
+
+        for (Map.Entry<UUID, Long> entry : products.entrySet()) {
+            UUID productId = entry.getKey();
+            Long quantity = entry.getValue();
+
+            ProductStock productStock = repository.findById(productId)
+                    .orElseThrow(() -> new NoSpecifiedProductInWarehouseException(
+                            "Продукт с ID " + productId + " не найден на складе"));
+
+            if (productStock.getQuantity() < quantity) {
+                throw new ProductInShoppingCartLowQuantityInWarehouseException(
+                        "Недостаточный запас продукции: " + productId);
+            }
+
+            productStock.setQuantity(productStock.getQuantity() - quantity);
+            repository.save(productStock);
+
+            totalWeight += productStock.getWeight() * quantity;
+            totalVolume += productStock.volume() * quantity;
+            fragile = fragile || Boolean.TRUE.equals(productStock.getFragile());
+        }
+
+        OrderBooking booking = OrderBooking.builder()
+                .bookingId(UUID.randomUUID())
+                .orderId(request.getOrderId())
+                .totalWeight(totalWeight)
+                .totalVolume(totalVolume)
+                .fragile(fragile)
+                .products(products)
+                .build();
+
+        bookingRepository.save(booking);
+
+        log.info("Заказ собран: orderId={}, productsCount={}, weight={}, volume={}, fragile={}",
+                request.getOrderId(), products.size(), totalWeight, totalVolume, fragile);
+
+        return BookedProductsDto.builder()
+                .deliveryWeight(totalWeight)
+                .deliveryVolume(totalVolume)
+                .fragile(fragile)
+                .build();
+    }
+
+    @Override
+    public void shippedToDelivery(ShippedToDeliveryRequest request) {
+        OrderBooking booking = bookingRepository.findByOrderId(request.getOrderId())
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Заказ на оформление не найден: " + request.getOrderId()));
+
+        booking.setDeliveryId(request.getDeliveryId());
+        bookingRepository.save(booking);
+
+        log.info("Товар отправлен в доставку: orderId={}, deliveryId={}",
+                request.getOrderId(), request.getDeliveryId());
+    }
+
+    @Override
+    public void returnProduct(Map<UUID, Long> products) {
+        if (products == null || products.isEmpty()) {
+            throw new IllegalArgumentException("Товары не могут быть пустыми или содержать нулевое значение.");
+        }
+
+        for (Map.Entry<UUID, Long> entry : products.entrySet()) {
+            ProductStock stock = repository.findById(entry.getKey())
+                    .orElseThrow(() -> new NoSpecifiedProductInWarehouseException(
+                            "Товар с ID " + entry.getKey() + " не найден не складе"));
+
+            stock.setQuantity(stock.getQuantity() + entry.getValue());
+            repository.save(stock);
+
+            log.debug("Возврат товара: productId={}, quantity={}", entry.getKey(), entry.getValue());
+        }
+
+        log.info("Товары возвращены на склад: {} товаров", products.size());
     }
 
     private String buildMissingProductsMessage(Map<UUID, Long> missingProducts) {
